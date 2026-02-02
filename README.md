@@ -1,116 +1,117 @@
-# 🦅 حورس - نظام إدارة مساحات العمل المشتركة
+# 🦅 Horus - Coworking Space Management System
 
-تطبيق سطح المكتب لإدارة مساحات العمل المشتركة (Coworking Spaces) باستخدام React و Electron.
+Desktop application for managing coworking spaces using React and Electron.
 
-## ✨ المميزات
+## ✨ Features
 
-- 🚀 **بدء جلسة سريع**: أدخل رقم الهاتف فقط لبدء الجلسة
-- ⏱️ **تتبع لحظي**: عرض الوقت المنقضي والتكلفة المتوقعة لحظياً
-- 📦 **إدارة الباقات**: نظام مرن للباقات مع خصم تلقائي من الساعات
-- 💰 **محاسبة متكاملة**: تقارير يومية وشهرية مفصلة
-- 👥 **إدارة العملاء**: قاعدة بيانات شاملة للعملاء والاشتراكات
-- 🍵 **إضافة مشروبات**: إضافة المشروبات للجلسات بسهولة
-- 🔒 **حماية البيانات**: منع إغلاق البرنامج عند وجود جلسات نشطة
-- 🌍 **واجهة عربية**: دعم كامل للغة العربية (RTL)
+- 🚀 **Quick Start**: Simply enter a phone number to start a session.
+- ⏱️ **Real-time Tracking**: Live display of elapsed time and estimated cost.
+- 📦 **Package Management**: Flexible package system with automatic hour deduction.
+- 💰 **Integrated Accounting**: Detailed daily and monthly reports.
+- 👥 **Customer Management**: Comprehensive database for customers and subscriptions.
+- 🍵 **Beverage Tracking**: Easily add beverages to active sessions.
+- 🔒 **Data Protection**: Prevents accidental closure while sessions are active.
+- 🌍 **RTL Support**: Full support for Arabic language and RTL layout.
 
-## 🛠️ التقنيات المستخدمة
+## 🛠️ Tech Stack
 
-- **React 18** - واجهة المستخدم
-- **Electron** - تطبيق سطح المكتب
-- **Redux Toolkit** - إدارة الحالة
-- **Material-UI v5** - مكتبة المكونات (RTL Support)
-- **SQLite** - قاعدة البيانات
-- **Day.js** - معالجة التواريخ
-- **jsPDF** - إنشاء التقارير PDF
+- **React 18** - User Interface
+- **Electron** - Desktop Application
+- **Redux Toolkit** - State Management
+- **Material-UI v5** - Component Library (RTL Support)
+- **SQLite** - Database
+- **Day.js** - Date Manipulation
+- **jsPDF** - PDF Report Generation
 
-## 📦 التثبيت والتشغيل
+## 📦 Installation & Setup
 
-### المتطلبات
-- Node.js (v16 أو أحدث)
-- npm أو yarn
+### Requirements
+- Node.js (v16 or higher)
+- npm or yarn
 
-### خطوات التشغيل
+### Steps
 
-1. **تثبيت التبعيات**
+1. **Install Dependencies**
 ```bash
-cd d:\genius\horus-coworking
+git clone https://github.com/yousef-ehabb/horus-coworking.git
+cd horus-coworking
 npm install
 ```
 
-2. **تشغيل التطبيق (Development)**
+2. **Run Application (Development)**
 ```bash
 npm start
 ```
 
-3. **بناء التطبيق (Production)**
+3. **Build Application (Production)**
 ```bash
 npm run build
 npm run dist
 ```
 
-## 📱 الصفحات الرئيسية
+## 📱 Main Pages
 
-### 🏠 لوحة التحكم (Dashboard)
-- نموذج بدء جلسة سريع
-- عرض الجلسات النشطة
-- إحصائيات يومية
-- **تنبيهات واضحة** للعملاء (مع باقة / بدون باقة)
+### 🏠 Dashboard
+- Quick session start form
+- View active sessions
+- Daily statistics
+- **Clear Alerts** for customers (Active Package / No Package)
 
-### 👥 إدارة العملاء
-- إضافة وتعديل العملاء
-- عرض الباقات النشطة لكل عميل
-- إحصائيات الاستخدام
+### 👥 Customer Management
+- Add and edit customers
+- View active packages for each customer
+- Usage statistics
 
-### ⏰ إدارة الجلسات
-- عرض الجلسات النشطة
-- سجل الجلسات المكتملة
-- إضافة مشروبات للجلسات
-- إنهاء الجلسات مع حساب التكلفة
+### ⏰ Session Management
+- Monitor active sessions
+- History of completed sessions
+- Add beverages to sessions
+- End sessions with cost calculation
 
-### 📦 إدارة الباقات
-- إنشاء وتعديل الباقات
-- عرض اشتراكات العملاء
-- تتبع الساعات المتبقية
+### 📦 Package Management
+- Create and edit packages
+- View customer subscriptions
+- Track remaining hours
 
-### 🍵 إدارة المشروبات
-- إضافة وتعديل المشروبات
-- ضبط الأسعار
+### 🍵 Beverage Management
+- Add and edit beverages
+- Set prices
 
-### 💰 الحسابات والتقارير
-- تقرير يومي شامل
-- سجل المعاملات المالية
-- تقسيم حسب طرق الدفع
+### 💰 Accounts & Reports
+- Comprehensive daily report
+- Financial transaction logs
+- Breakdown by payment methods
 
-### ⚙️ الإعدادات
-- ضبط أسعار الساعات (طلاب/موظفين)
-- معلومات المساحة
+### ⚙️ Settings
+- Set hourly rates (Students/Employees)
+- Space information
 
-## 🗄️ قاعدة البيانات
+## 🗄️ Database
 
-القاعدة تحتوي على 8 جداول رئيسية:
-- `customers` - العملاء
-- `sessions` - الجلسات
-- `packages` - الباقات المتاحة
-- `customer_packages` - اشتراكات العملاء
-- `beverages` - المشروبات
-- `session_beverages` - طلبات المشروبات
-- `transactions` - المعاملات المالية
-- `settings` - الإعدادات
+The database consists of 8 main tables:
+- `customers` - Client information
+- `sessions` - Session data
+- `packages` - Available packages
+- `customer_packages` - Client subscriptions
+- `beverages` - Drink menu
+- `session_beverages` - Drink orders per session
+- `transactions` - Financial records
+- `settings` - App configuration
 
-## 🔐 الأمان
+## 🔐 Security
 
-- منع إغلاق التطبيق عند وجود جلسات نشطة
-- حساب دقيق للوقت (بالدقيقة)
-- تخزين آمن في قاعدة بيانات محلية
+- Prevents app closure while sessions are active
+- Precise time calculation (per minute)
+- Secure storage in a local SQLite database
 
-## 📝 المساهمة
+## 📝 Contribution
 
-هذا المشروع تم تطويره خصيصاً لإدارة مساحات العمل المشتركة.
+This project was developed specifically for managing coworking spaces.
 
-## 📄 الترخيص
+## 📄 License
 
-جميع الحقوق محفوظة © 2026
+All rights reserved © 2026
 
 ---
 
-**طوّره مع ❤️ للمساحات العربية**
+**Developed with ❤️**
