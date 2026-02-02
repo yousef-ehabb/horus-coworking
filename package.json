@@ -1,0 +1,79 @@
+{
+  "name": "horus-coworking",
+  "version": "1.0.0",
+  "description": "نظام إدارة مساحات العمل المشتركة - حورس",
+  "main": "src/main/main.js",
+  "homepage": "./",
+  "scripts": {
+    "start": "concurrently \"cross-env BROWSER=none react-scripts start\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "react-scripts build",
+    "electron": "electron .",
+    "pack": "electron-builder --dir",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
+    "@mui/icons-material": "^5.15.10",
+    "@mui/material": "^5.15.10",
+    "@reduxjs/toolkit": "^2.1.0",
+    "dayjs": "^1.11.10",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.50.0",
+    "react-redux": "^9.1.0",
+    "react-router-dom": "^6.21.3",
+    "recharts": "^2.12.0",
+    "sqlite3": "^5.0.2",
+    "yup": "^1.3.3"
+  },
+  "devDependencies": {
+    "@emotion/cache": "^11.11.0",
+    "@hookform/resolvers": "^3.3.4",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^40.1.0",
+    "electron-builder": "^26.7.0",
+    "electron-is-dev": "^2.0.0",
+    "react-scripts": "5.0.1",
+    "stylis": "^4.3.1",
+    "stylis-plugin-rtl": "^2.1.1",
+    "wait-on": "^7.2.0",
+    "jest": "^29.7.0"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "build": {
+    "appId": "com.horus.coworking",
+    "productName": "حورس",
+    "files": [
+      "build/**/*",
+      "src/main/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "buildResources": "public"
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/logo.png"
+    }
+  }
+}

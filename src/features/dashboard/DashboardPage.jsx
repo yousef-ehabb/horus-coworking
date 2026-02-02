@@ -1,0 +1,393 @@
+import React, { useState, useEffect } from 'react';
+import {
+    Box, Grid, Card, CardContent, Typography, TextField, Button,
+    Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+    Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
+    FormControl, InputLabel, Select, MenuItem, Alert, AlertTitle,
+} from '@mui/material';
+import {
+    PlayArrow, Stop, LocalCafe, TrendingUp, People, CardGiftcard, AttachMoney,
+} from '@mui/icons-material';
+import dayjs from 'dayjs';
+
+const { electronAPI } = window;
+
+function DashboardPage() {
+    const [phoneNumber, setPhoneNumber] = useState('');
+    const [currentTime, setCurrentTime] = useState(Date.now());
+    const [activeSessions, setActiveSessions] = useState([]);
+    const [newCustomerDialog, setNewCustomerDialog] = useState(false);
+    const [newCustomerData, setNewCustomerData] = useState({ name: '', type: 'student' });
+    const [foundCustomer, setFoundCustomer] = useState(null);
+    const [stats, setStats] = useState({ revenue: 0, sessions: 0, customers: 0, packages: 0 });
+    const [beverageDialog, setBeverageDialog] = useState({ open: false, session: null });
+    const [beverages, setBeverages] = useState([]);
+    const [selectedBeverage, setSelectedBeverage] = useState('');
+    const [quantity, setQuantity] = useState(1);
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
+        return () => clearInterval(timer);
+    }, []);
+
+    useEffect(() => {
+        loadActiveSessions();
+        loadStats();
+        loadBeverages();
+        const interval = setInterval(loadActiveSessions, 5000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const loadBeverages = async () => {
+        try {
+            const data = await electronAPI.getBeverages();
+            setBeverages(data.filter(b => b.is_available));
+        } catch (error) {
+            console.error('Error loading beverages:', error);
+        }
+    };
+
+    const loadActiveSessions = async () => {
+        try {
+            const sessions = await electronAPI.getActiveSessions();
+            setActiveSessions(sessions);
+        } catch (error) {
+            console.error('Error loading sessions:', error);
+        }
+    };
+
+    const loadStats = async () => {
+        try {
+            const report = await electronAPI.getDailyReport();
+            setStats({
+                revenue: report.totalRevenue,
+                sessions: report.sessionsCount,
+                customers: report.newCustomers,
+                packages: report.packagesSold,
+            });
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    };
+
+    const handlePhoneChange = async (e) => {
+        const phone = e.target.value;
+        setPhoneNumber(phone);
+
+        if (phone.length === 11) {
+            try {
+                const customer = await electronAPI.getCustomerByPhone(phone);
+                setFoundCustomer(customer || null);
+            } catch (error) {
+                setFoundCustomer(null);
+            }
+        } else {
+            setFoundCustomer(null);
+        }
+    };
+
+    const handleStartSession = async () => {
+        if (phoneNumber.length !== 11) {
+            alert('يرجى إدخال رقم هاتف صحيح (11 رقم)');
+            return;
+        }
+
+        if (foundCustomer) {
+            await startSession(foundCustomer);
+        } else {
+            setNewCustomerDialog(true);
+        }
+    };
+
+    const startSession = async (customer) => {
+        try {
+            await electronAPI.createSession({
+                customerId: customer.id,
+                customerName: customer.name,
+                customerPhone: customer.phone,
+                customerType: customer.type,
+                startTime: new Date().toISOString(),
+            });
+
+            setPhoneNumber('');
+            setFoundCustomer(null);
+            loadActiveSessions();
+        } catch (error) {
+            alert('حدث خطأ في بدء الجلسة');
+        }
+    };
+
+    const handleCreateAndStart = async () => {
+        if (!newCustomerData.name) {
+            alert('يرجى إدخال اسم العميل');
+            return;
+        }
+
+        try {
+            const customer = await electronAPI.createCustomer({
+                name: newCustomerData.name,
+                phone: phoneNumber,
+                type: newCustomerData.type,
+            });
+
+            await startSession(customer);
+            setNewCustomerDialog(false);
+            setNewCustomerData({ name: '', type: 'student' });
+        } catch (error) {
+            alert('حدث خطأ');
+        }
+    };
+
+    const getElapsedTime = (startTime) => {
+        const elapsed = currentTime - new Date(startTime).getTime();
+        const hours = Math.floor(elapsed / 3600000);
+        const minutes = Math.floor((elapsed % 3600000) / 60000);
+        const seconds = Math.floor((elapsed % 60000) / 1000);
+        return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    };
+
+    const getExpectedCost = (session) => {
+        const elapsed = currentTime - new Date(session.start_time).getTime();
+        const hours = elapsed / 3600000;
+        return (hours * session.hourly_rate).toFixed(2);
+    };
+
+    const handleAddBeverage = async () => {
+        if (!selectedBeverage || quantity < 1) {
+            alert('يرجى اختيار المشروب والكمية');
+            return;
+        }
+
+        try {
+            await electronAPI.addBeverageToSession(
+                beverageDialog.session.id,
+                selectedBeverage,
+                quantity
+            );
+            setBeverageDialog({ open: false, session: null });
+            setSelectedBeverage('');
+            setQuantity(1);
+            loadActiveSessions();
+        } catch (error) {
+            alert('حدث خطأ في إضافة المشروب');
+        }
+    };
+
+    // تحديد رسالة التنبيه بناءً على حالة العميل
+    const getCustomerAlert = () => {
+        if (!foundCustomer) return null;
+
+        const rate = foundCustomer.type === 'student' ? 20 : 30;
+
+        if (foundCustomer.active_package_id) {
+            return (
+                <Alert severity="info" sx={{ mt: 2 }}>
+                    <AlertTitle><strong>{foundCustomer.name}</strong> - {foundCustomer.type === 'student' ? 'طالب' : 'موظف'}</AlertTitle>
+                    ✅ لديه باقة نشطة: <strong>{foundCustomer.package_name}</strong><br />
+                    الساعات المتبقية: <strong>{foundCustomer.remaining_hours} ساعة</strong><br />
+                    سيتم الخصم من الباقة
+                </Alert>
+            );
+        } else {
+            return (
+                <Alert severity="warning" sx={{ mt: 2 }}>
+                    <AlertTitle><strong>{foundCustomer.name}</strong> - {foundCustomer.type === 'student' ? 'طالب' : 'موظف'}</AlertTitle>
+                    ⚠️ بدون باقة - سيتم احتساب الجلسة بسعر الساعة<br />
+                    السعر: <strong>{rate} جنيه/ساعة</strong>
+                </Alert>
+            );
+        }
+    };
+
+    return (
+        <Box>
+            {/* نموذج بدء جلسة سريع */}
+            <Card elevation={4} sx={{ mb: 3, background: 'linear-gradient(135deg, #1565C0 0%, #42a5f5 100%)', color: 'white' }}>
+                <CardContent sx={{ p: 3 }}>
+                    <Typography variant="h5" sx={{ mb: 3, fontWeight: 700 }}>
+                        🚀 بدء جلسة جديدة
+                    </Typography>
+
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                        <TextField
+                            fullWidth
+                            label="رقم الهاتف"
+                            placeholder="01xxxxxxxxx"
+                            value={phoneNumber}
+                            onChange={handlePhoneChange}
+                            inputProps={{ maxLength: 11 }}
+                            sx={{ backgroundColor: 'white', borderRadius: 1 }}
+                        />
+
+                        <Button
+                            variant="contained"
+                            size="large"
+                            startIcon={<PlayArrow />}
+                            onClick={handleStartSession}
+                            disabled={phoneNumber.length !== 11}
+                            sx={{
+                                minWidth: 180,
+                                height: 56,
+                                backgroundColor: '#FFD700',
+                                color: '#000',
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                                '&:hover': { backgroundColor: '#FFC000' },
+                            }}
+                        >
+                            بدء الجلسة
+                        </Button>
+                    </Box>
+
+                    {getCustomerAlert()}
+                </CardContent>
+            </Card>
+
+            {/* الجلسات النشطة */}
+            <Card elevation={3} sx={{ mb: 3 }}>
+                <CardContent>
+                    <Typography variant="h5" sx={{ mb: 2, fontWeight: 700, color: 'primary.main' }}>
+                        👥 الجلسات النشطة ({activeSessions.length})
+                    </Typography>
+
+                    {activeSessions.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 5 }}>
+                            <Typography variant="h6" color="text.secondary">لا توجد جلسات نشطة</Typography>
+                            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>ابدأ جلسة جديدة من الأعلى</Typography>
+                        </Box>
+                    ) : (
+                        <TableContainer>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell sx={{ fontWeight: 700 }}>الاسم</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>النوع</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>وقت البدء</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>الوقت المنقضي</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>التكلفة المتوقعة</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>الإجراءات</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {activeSessions.map((session) => (
+                                        <TableRow key={session.id} hover>
+                                            <TableCell sx={{ fontWeight: 600 }}>{session.customer_name}</TableCell>
+                                            <TableCell>
+                                                <Chip label={session.customer_type === 'student' ? 'طالب' : 'موظف'}
+                                                    color={session.customer_type === 'student' ? 'info' : 'warning'} size="small" />
+                                            </TableCell>
+                                            <TableCell>{dayjs(session.start_time).format('hh:mm A')}</TableCell>
+                                            <TableCell>
+                                                <Chip label={getElapsedTime(session.start_time)} color="primary" variant="outlined"
+                                                    sx={{ fontWeight: 600, fontFamily: 'monospace' }} />
+                                            </TableCell>
+                                            <TableCell>
+                                                <Typography variant="body1" sx={{ fontWeight: 700, color: 'success.main' }}>
+                                                    {getExpectedCost(session)} جنيه
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                                    <IconButton size="small" color="secondary"
+                                                        onClick={() => setBeverageDialog({ open: true, session })}
+                                                        title="إضافة مشروب">
+                                                        <LocalCafe />
+                                                    </IconButton>
+                                                    <IconButton size="small" color="error" title="إنهاء الجلسة"><Stop /></IconButton>
+                                                </Box>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    )}
+                </CardContent>
+            </Card>
+
+            {/* إحصائيات */}
+            <Grid container spacing={3}>
+                {[
+                    { icon: <AttachMoney />, value: `${stats.revenue} جنيه`, label: 'إيرادات اليوم', color: 'success.main' },
+                    { icon: <TrendingUp />, value: stats.sessions, label: 'جلسات مكتملة', color: 'primary.main' },
+                    { icon: <People />, value: stats.customers, label: 'عملاء جدد', color: 'info.main' },
+                    { icon: <CardGiftcard />, value: stats.packages, label: 'باقات مباعة', color: 'secondary.main' },
+                ].map((stat, i) => (
+                    <Grid item xs={12} sm={6} md={3} key={i}>
+                        <Card elevation={2}>
+                            <CardContent sx={{ textAlign: 'center' }}>
+                                {React.cloneElement(stat.icon, { sx: { fontSize: 40, color: stat.color, mb: 1 } })}
+                                <Typography variant="h4" sx={{ fontWeight: 700, color: stat.color }}>{stat.value}</Typography>
+                                <Typography variant="body2" color="text.secondary">{stat.label}</Typography>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
+
+            {/* Dialog */}
+            <Dialog open={newCustomerDialog} onClose={() => setNewCustomerDialog(false)} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ fontWeight: 700 }}>عميل جديد</DialogTitle>
+                <DialogContent>
+                    <Box sx={{ pt: 2 }}>
+                        <TextField fullWidth label="رقم الهاتف" value={phoneNumber} disabled sx={{ mb: 2 }} />
+                        <TextField fullWidth label="الاسم الكامل" value={newCustomerData.name}
+                            onChange={(e) => setNewCustomerData({ ...newCustomerData, name: e.target.value })} autoFocus sx={{ mb: 2 }} />
+                        <FormControl fullWidth>
+                            <InputLabel>نوع العميل</InputLabel>
+                            <Select value={newCustomerData.type} onChange={(e) => setNewCustomerData({ ...newCustomerData, type: e.target.value })} label="نوع العميل">
+                                <MenuItem value="student">طالب</MenuItem>
+                                <MenuItem value="employee">موظف</MenuItem>
+                            </Select>
+                        </FormControl>
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setNewCustomerDialog(false)}>إلغاء</Button>
+                    <Button variant="contained" onClick={handleCreateAndStart} startIcon={<PlayArrow />}>حفظ وبدء الجلسة</Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Beverage Dialog */}
+            <Dialog open={beverageDialog.open} onClose={() => setBeverageDialog({ open: false, session: null })} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ fontWeight: 700 }}>إضافة مشروب للجلسة</DialogTitle>
+                <DialogContent>
+                    {beverageDialog.session && (
+                        <Box sx={{ pt: 2 }}>
+                            <Alert severity="info" sx={{ mb: 3 }}>
+                                <Typography variant="body2"><strong>العميل:</strong> {beverageDialog.session.customer_name}</Typography>
+                            </Alert>
+
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <FormControl fullWidth>
+                                        <InputLabel>المشروب</InputLabel>
+                                        <Select value={selectedBeverage} label="المشروب"
+                                            onChange={(e) => setSelectedBeverage(e.target.value)}>
+                                            {beverages.map((bev) => (
+                                                <MenuItem key={bev.id} value={bev.id}>
+                                                    {bev.name} - {bev.price} جنيه
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField fullWidth label="الكمية" type="number" value={quantity}
+                                        onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                                        inputProps={{ min: 1 }} />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setBeverageDialog({ open: false, session: null })}>إلغاء</Button>
+                    <Button variant="contained" onClick={handleAddBeverage}>إضافة</Button>
+                </DialogActions>
+            </Dialog>
+        </Box>
+    );
+}
+
+export default DashboardPage;
