@@ -1,6 +1,6 @@
 {
   "name": "horus-coworking",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "نظام إدارة مساحات العمل المشتركة - حورس",
   "main": "src/main/main.js",
   "author": {
@@ -21,10 +21,10 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
-    "@emotion/react": "^11.11.3",
-    "@emotion/styled": "^11.11.0",
-    "@mui/icons-material": "^5.15.10",
-    "@mui/material": "^5.15.10",
+    "@emotion/react": "^11.13.3",
+    "@emotion/styled": "^11.13.0",
+    "@mui/icons-material": "^6.3.0",
+    "@mui/material": "^6.3.0",
     "@reduxjs/toolkit": "^2.1.0",
     "dayjs": "^1.11.10",
     "html2canvas": "^1.4.1",
@@ -88,7 +88,8 @@
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
-      "oneClick": true,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
       "perMachine": false,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,

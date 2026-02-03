@@ -1,3 +1,5 @@
+const { roundToInteger, calculateTotal, calculateHoursCost } = require('../utils/mathHelpers');
+
 module.exports = (ipcMain, db) => {
     ipcMain.handle('sessions:getActive', () => {
         return new Promise((resolve, reject) => {
@@ -68,7 +70,7 @@ module.exports = (ipcMain, db) => {
                     return;
                 }
 
-                const totalPrice = beverage.price * quantity;
+                const totalPrice = calculateTotal(beverage.price, quantity);
 
                 db.run(`
           INSERT INTO session_beverages (
@@ -133,10 +135,10 @@ module.exports = (ipcMain, db) => {
                 WHERE id = ?
               `, [newRemaining, newStatus, activePackage.id]);
                         } else {
-                            hoursCost = hours * session.hourly_rate;
+                            hoursCost = calculateHoursCost(hours, session.hourly_rate);
                         }
 
-                        const totalCost = hoursCost + session.beverages_cost;
+                        const totalCost = roundToInteger(hoursCost + session.beverages_cost);
 
                         db.run(`
               UPDATE sessions 

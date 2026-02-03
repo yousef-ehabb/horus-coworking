@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import { Print, Close } from '@mui/icons-material';
 import dayjs from 'dayjs';
+import { formatCurrency, formatHoursToTime } from '../../utils/formatters';
 
 const { electronAPI } = window;
 
@@ -145,7 +146,7 @@ function InvoiceDialog({ open, onClose, sessionId }) {
                                 </TableRow>
                                 <TableRow>
                                     <TableCell sx={{ fontWeight: 600 }}>المدة الإجمالية</TableCell>
-                                    <TableCell>{session.total_hours?.toFixed(2)} ساعة</TableCell>
+                                    <TableCell>{formatHoursToTime(session.total_hours)}</TableCell>
                                 </TableRow>
                                 {!isFromPackage && (
                                     <TableRow>
@@ -215,7 +216,7 @@ function InvoiceDialog({ open, onClose, sessionId }) {
                                     <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                         <Typography>تكلفة الوقت</Typography>
                                         <Typography sx={{ fontWeight: 600 }}>
-                                            {session.hours_cost?.toFixed(2)} {settings.currency || 'جنيه'}
+                                            {formatCurrency(session.hours_cost)} {settings.currency || 'جنيه'}
                                         </Typography>
                                     </Box>
                                 </Grid>
@@ -245,7 +246,7 @@ function InvoiceDialog({ open, onClose, sessionId }) {
                                         الإجمالي
                                     </Typography>
                                     <Typography variant="h5" sx={{ fontWeight: 800 }}>
-                                        {session.total_cost?.toFixed(2)} {settings.currency || 'جنيه'}
+                                        {formatCurrency(session.total_cost)} {settings.currency || 'جنيه'}
                                     </Typography>
                                 </Box>
                             </Grid>

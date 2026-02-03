@@ -10,6 +10,7 @@ import {
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import InvoiceDialog from '../sessions/InvoiceDialog';
+import { formatCurrency, calculateExpectedCost } from '../../utils/formatters';
 
 const { electronAPI } = window;
 
@@ -151,11 +152,7 @@ function DashboardPage() {
     };
 
     const getExpectedCost = (session) => {
-        const elapsed = currentTime - new Date(session.start_time).getTime();
-        const hours = elapsed / 3600000;
-        const timeCost = hours * session.hourly_rate;
-        const beveragesCost = session.beverages_cost || 0;
-        return (timeCost + beveragesCost).toFixed(2);
+        return calculateExpectedCost(session);
     };
 
     const handleAddBeverage = async () => {
@@ -401,10 +398,10 @@ function DashboardPage() {
                                 <Typography variant="body2"><strong>وقت البدء:</strong> {dayjs(endDialog.session.start_time).format('DD/MM/YYYY hh:mm A')}</Typography>
                                 <Typography variant="body2"><strong>الوقت المنقضي:</strong> {calculateElapsed(endDialog.session.start_time)}</Typography>
                                 <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
-                                    <Typography variant="body2"><strong>تكلفة الوقت:</strong> {(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate).toFixed(2)} جنيه</Typography>
+                                    <Typography variant="body2"><strong>تكلفة الوقت:</strong> {Math.round(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate)} جنيه</Typography>
                                     <Typography variant="body2"><strong>تكلفة المشروبات:</strong> {endDialog.session.beverages_cost || 0} جنيه</Typography>
                                     <Typography variant="h6" sx={{ mt: 1, color: 'success.main', fontWeight: 800 }}>
-                                        إجمالي: {(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate + (endDialog.session.beverages_cost || 0)).toFixed(2)} جنيه
+                                        إجمالي: {calculateExpectedCost(endDialog.session)} جنيه
                                     </Typography>
                                 </Box>
                             </Alert>

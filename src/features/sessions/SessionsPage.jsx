@@ -8,6 +8,7 @@ import {
 import { Stop, LocalCafe, Receipt } from '@mui/icons-material';
 import dayjs from 'dayjs';
 import InvoiceDialog from './InvoiceDialog';
+import { formatCurrency, calculateExpectedCost, formatHoursToTime } from '../../utils/formatters';
 
 const { electronAPI } = window;
 
@@ -172,7 +173,7 @@ function SessionsPage() {
                                                 {session.beverages_cost || 0} جنيه
                                             </TableCell>
                                             <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>
-                                                {(((Date.now() - new Date(session.start_time).getTime()) / 3600000) * session.hourly_rate + (session.beverages_cost || 0)).toFixed(2)} جنيه
+                                                {calculateExpectedCost(session)} جنيه
                                             </TableCell>
                                             <TableCell>
                                                 <IconButton size="small" color="secondary"
@@ -215,9 +216,9 @@ function SessionsPage() {
                                         <TableRow key={session.id} hover>
                                             <TableCell sx={{ fontWeight: 600 }}>{session.customer_name}</TableCell>
                                             <TableCell>{dayjs(session.start_time).format('DD/MM/YYYY')}</TableCell>
-                                            <TableCell>{session.total_hours?.toFixed(2)} ساعة</TableCell>
+                                            <TableCell>{formatHoursToTime(session.total_hours)}</TableCell>
                                             <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>
-                                                {session.total_cost?.toFixed(2)} جنيه
+                                                {formatCurrency(session.total_cost)} جنيه
                                             </TableCell>
                                             <TableCell>
                                                 <Chip label={session.payment_method === 'cash' ? 'كاش' : 'كارت'} size="small" />
@@ -278,10 +279,10 @@ function SessionsPage() {
                                 <Typography variant="body2"><strong>وقت البدء:</strong> {dayjs(endDialog.session.start_time).format('DD/MM/YYYY hh:mm A')}</Typography>
                                 <Typography variant="body2"><strong>الوقت المنقضي:</strong> {calculateElapsed(endDialog.session.start_time)}</Typography>
                                 <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
-                                    <Typography variant="body2"><strong>تكلفة الوقت:</strong> {(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate).toFixed(2)} جنيه</Typography>
+                                    <Typography variant="body2"><strong>تكلفة الوقت:</strong> {Math.round(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate)} جنيه</Typography>
                                     <Typography variant="body2"><strong>تكلفة المشروبات:</strong> {endDialog.session.beverages_cost || 0} جنيه</Typography>
                                     <Typography variant="h6" sx={{ mt: 1, color: 'success.main', fontWeight: 800 }}>
-                                        إجمالي: {(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate + (endDialog.session.beverages_cost || 0)).toFixed(2)} جنيه
+                                        إجمالي: {calculateExpectedCost(endDialog.session)} جنيه
                                     </Typography>
                                 </Box>
                             </Alert>

@@ -62,8 +62,17 @@ function createWindow() {
     });
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
     db = Database.initialize();
+
+    // تشغيل migration لتقريب جميع الأرقام في قاعدة البيانات
+    try {
+        const { roundAllNumbers } = require('./migrations/roundNumbers');
+        await roundAllNumbers();
+        console.log('✅ تم تنظيف قاعدة البيانات بنجاح');
+    } catch (error) {
+        console.error('⚠️ خطأ في تنظيف قاعدة البيانات:', error);
+    }
 
     require('./ipc/customers')(ipcMain, db);
     require('./ipc/sessions')(ipcMain, db);

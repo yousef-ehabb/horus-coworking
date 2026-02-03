@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { Add, Edit } from '@mui/icons-material';
 import dayjs from 'dayjs';
+import { formatCurrency, formatHoursToTime } from '../../utils/formatters';
 
 const { electronAPI } = window;
 
@@ -87,7 +88,7 @@ function PackagesPage() {
                                             <TableCell sx={{ fontWeight: 600 }}>{pkg.name}</TableCell>
                                             <TableCell>{pkg.total_hours} ساعة</TableCell>
                                             <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>{pkg.price} جنيه</TableCell>
-                                            <TableCell>{(pkg.price / pkg.total_hours).toFixed(2)} جنيه</TableCell>
+                                            <TableCell>{formatCurrency(pkg.price / pkg.total_hours)} جنيه</TableCell>
                                             <TableCell>
                                                 <Chip label={pkg.customer_type === 'student' ? 'طلاب' : pkg.customer_type === 'employee' ? 'موظفين' : 'الكل'}
                                                     color={pkg.customer_type === 'student' ? 'info' : 'warning'} size="small" />
@@ -132,7 +133,7 @@ function PackagesPage() {
                                             <TableCell>{cp.total_hours} ساعة</TableCell>
                                             <TableCell>
                                                 <Typography variant="body2" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                                                    {cp.remaining_hours.toFixed(2)} ساعة
+                                                    {formatHoursToTime(cp.remaining_hours)}
                                                 </Typography>
                                             </TableCell>
                                             <TableCell>{cp.price_paid} جنيه</TableCell>

@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import { Add, Edit, CardGiftcard } from '@mui/icons-material';
 import dayjs from 'dayjs';
+import { formatCurrency, formatHoursToTime } from '../../utils/formatters';
 
 const { electronAPI } = window;
 
@@ -128,14 +129,14 @@ function CustomersPage() {
                                             {customer.package_name ? (
                                                 <Box>
                                                     <Typography variant="body2" sx={{ fontWeight: 600 }}>{customer.package_name}</Typography>
-                                                    <Typography variant="caption" color="text.secondary">{customer.remaining_hours} ساعة متبقية</Typography>
+                                                    <Typography variant="caption" color="text.secondary">{formatHoursToTime(customer.remaining_hours)} متبقية</Typography>
                                                 </Box>
                                             ) : (
                                                 <Typography variant="caption" color="text.secondary">بدون باقة</Typography>
                                             )}
                                         </TableCell>
-                                        <TableCell>{customer.total_hours_used?.toFixed(2) || 0} ساعة</TableCell>
-                                        <TableCell>{customer.total_amount_paid?.toFixed(2) || 0} جنيه</TableCell>
+                                        <TableCell>{formatHoursToTime(customer.total_hours_used)}</TableCell>
+                                        <TableCell>{formatCurrency(customer.total_amount_paid) || 0} جنيه</TableCell>
                                         <TableCell>{dayjs(customer.registration_date).format('DD/MM/YYYY')}</TableCell>
                                         <TableCell>
                                             <IconButton size="small" color="primary" onClick={() => setDialog({ open: true, mode: 'edit', data: customer })}>

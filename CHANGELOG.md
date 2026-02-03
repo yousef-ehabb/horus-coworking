@@ -2,6 +2,12 @@
 
 All notable changes to the Horus Coworking Space Management System will be documented in this file.
 
+## [1.1.0] - 2026-02-03
+### Added
+- Enhanced Windows Installer with Setup Wizard (Next > Next).
+- Support for selecting custom installation directory.
+- Optional desktop shortcut creation.
+
 ## [1.0.0] - 2026-02-03
 
 ### Added

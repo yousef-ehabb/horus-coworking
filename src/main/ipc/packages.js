@@ -1,3 +1,5 @@
+const { roundToInteger } = require('../utils/mathHelpers');
+
 module.exports = (ipcMain, db) => {
     ipcMain.handle('packages:getAvailable', () => {
         return new Promise((resolve, reject) => {
@@ -29,7 +31,7 @@ module.exports = (ipcMain, db) => {
             db.run(`
         INSERT INTO packages (name, total_hours, price, customer_type) 
         VALUES (?, ?, ?, ?)
-      `, [data.name, data.totalHours, data.price, data.customerType || 'student'], function (err) {
+      `, [data.name, data.totalHours, roundToInteger(data.price), data.customerType || 'student'], function (err) {
                 if (err) reject(err);
                 else resolve({ id: this.lastID, ...data });
             });
@@ -42,7 +44,7 @@ module.exports = (ipcMain, db) => {
         UPDATE packages 
         SET name = ?, total_hours = ?, price = ?, customer_type = ?, is_active = ?
         WHERE id = ?
-      `, [data.name, data.totalHours, data.price, data.customerType, data.isActive ? 1 : 0, id], (err) => {
+      `, [data.name, data.totalHours, roundToInteger(data.price), data.customerType, data.isActive ? 1 : 0, id], (err) => {
                 if (err) reject(err);
                 else resolve({ id, ...data });
             });
