@@ -3,10 +3,11 @@ import {
     Box, Card, CardContent, Typography, Table, TableBody, TableCell,
     TableContainer, TableHead, TableRow, Chip, Tab, Tabs, IconButton,
     Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField,
-    FormControl, InputLabel, Select, MenuItem, Grid, Alert,
+    FormControl, InputLabel, Select, MenuItem, Grid, Alert, ListSubheader, Autocomplete,
 } from '@mui/material';
 import { Stop, LocalCafe, Receipt } from '@mui/icons-material';
 import dayjs from 'dayjs';
+import InvoiceDialog from './InvoiceDialog';
 
 const { electronAPI } = window;
 
@@ -20,6 +21,7 @@ function SessionsPage() {
     const [beverages, setBeverages] = useState([]);
     const [selectedBeverage, setSelectedBeverage] = useState('');
     const [quantity, setQuantity] = useState(1);
+    const [invoiceDialog, setInvoiceDialog] = useState({ open: false, sessionId: null });
 
     useEffect(() => {
         loadData();
@@ -27,6 +29,12 @@ function SessionsPage() {
         const interval = setInterval(loadData, 5000);
         return () => clearInterval(interval);
     }, []);
+
+    useEffect(() => {
+        if (tab === 1) {
+            loadHistory();
+        }
+    }, [tab]);
 
     const loadBeverages = async () => {
         try {
@@ -41,14 +49,22 @@ function SessionsPage() {
         try {
             const active = await electronAPI.getActiveSessions();
             setActiveSessions(active);
-
-            if (tab === 1) {
-                const hist = await electronAPI.getSessionHistory({});
-                setHistory(hist);
-            }
         } catch (error) {
             console.error('Error loading sessions:', error);
         }
+    };
+
+    const loadHistory = async () => {
+        try {
+            const hist = await electronAPI.getSessionHistory({});
+            setHistory(hist);
+        } catch (error) {
+            console.error('Error loading history:', error);
+        }
+    };
+
+    const handleExportPDF = () => {
+        window.print();
     };
 
     const handleEndSession = async () => {
@@ -58,9 +74,12 @@ function SessionsPage() {
                 paymentMethod: endData.paymentMethod,
                 notes: endData.notes,
             });
+            const sessionId = endDialog.session.id;
             setEndDialog({ open: false, session: null });
             setEndData({ paymentMethod: 'cash', notes: '' });
             loadData();
+            // Show invoice after ending session
+            setInvoiceDialog({ open: true, sessionId });
         } catch (error) {
             alert('حدث خطأ');
         }
@@ -98,11 +117,24 @@ function SessionsPage() {
         <Box>
             <Typography variant="h4" sx={{ mb: 3, fontWeight: 700 }}>إدارة الجلسات</Typography>
 
-            <Card elevation={3}>
-                <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <Tab label={`الجلسات النشطة (${activeSessions.length})`} />
-                    <Tab label="سجل الجلسات" />
-                </Tabs>
+            <Card elevation={1} sx={{ border: '1px solid', borderColor: 'neutral.200' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2, pt: 1 }}>
+                    <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ borderBottom: 'none' }}>
+                        <Tab label={`الجلسات النشطة (${activeSessions.length})`} />
+                        <Tab label="سجل الجلسات" />
+                    </Tabs>
+                    {tab === 1 && history.length > 0 && (
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<Receipt />}
+                            onClick={handleExportPDF}
+                            sx={{ '@media print': { display: 'none' } }}
+                        >
+                            تصدير PDF
+                        </Button>
+                    )}
+                </Box>
 
                 <CardContent>
                     {tab === 0 && (
@@ -116,6 +148,8 @@ function SessionsPage() {
                                         <TableCell sx={{ fontWeight: 700 }}>وقت البدء</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>الوقت المنقضي</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>سعر الساعة</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>تكلفة المشروبات</TableCell>
+                                        <TableCell sx={{ fontWeight: 700 }}>الإيراد المتوقع</TableCell>
                                         <TableCell sx={{ fontWeight: 700 }}>الإجراءات</TableCell>
                                     </TableRow>
                                 </TableHead>
@@ -134,6 +168,12 @@ function SessionsPage() {
                                                     sx={{ fontFamily: 'monospace', fontWeight: 600 }} />
                                             </TableCell>
                                             <TableCell>{session.hourly_rate} جنيه</TableCell>
+                                            <TableCell sx={{ fontWeight: 600, color: 'secondary.main' }}>
+                                                {session.beverages_cost || 0} جنيه
+                                            </TableCell>
+                                            <TableCell sx={{ fontWeight: 700, color: 'success.main' }}>
+                                                {(((Date.now() - new Date(session.start_time).getTime()) / 3600000) * session.hourly_rate + (session.beverages_cost || 0)).toFixed(2)} جنيه
+                                            </TableCell>
                                             <TableCell>
                                                 <IconButton size="small" color="secondary"
                                                     onClick={() => setBeverageDialog({ open: true, session })}
@@ -194,8 +234,36 @@ function SessionsPage() {
                                     ))}
                                 </TableBody>
                             </Table>
+                            {history.length === 0 && (
+                                <Box sx={{ textAlign: 'center', py: 5 }}>
+                                    <Typography color="text.secondary">لا توجد جلسات منتهية</Typography>
+                                </Box>
+                            )}
                         </TableContainer>
                     )}
+
+                    {/* Print Styles */}
+                    <style>
+                        {`
+                            @media print {
+                                body * {
+                                    visibility: hidden;
+                                }
+                                .MuiTableContainer-root, .MuiTableContainer-root * {
+                                    visibility: visible;
+                                }
+                                .MuiTableContainer-root {
+                                    position: absolute;
+                                    left: 0;
+                                    top: 0;
+                                    width: 100%;
+                                }
+                                header, nav, .MuiDrawer-root, .MuiTabs-root, button {
+                                    display: none !important;
+                                }
+                            }
+                        `}
+                    </style>
                 </CardContent>
             </Card>
 
@@ -209,6 +277,13 @@ function SessionsPage() {
                                 <Typography variant="body2"><strong>العميل:</strong> {endDialog.session.customer_name}</Typography>
                                 <Typography variant="body2"><strong>وقت البدء:</strong> {dayjs(endDialog.session.start_time).format('DD/MM/YYYY hh:mm A')}</Typography>
                                 <Typography variant="body2"><strong>الوقت المنقضي:</strong> {calculateElapsed(endDialog.session.start_time)}</Typography>
+                                <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                                    <Typography variant="body2"><strong>تكلفة الوقت:</strong> {(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate).toFixed(2)} جنيه</Typography>
+                                    <Typography variant="body2"><strong>تكلفة المشروبات:</strong> {endDialog.session.beverages_cost || 0} جنيه</Typography>
+                                    <Typography variant="h6" sx={{ mt: 1, color: 'success.main', fontWeight: 800 }}>
+                                        إجمالي: {(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate + (endDialog.session.beverages_cost || 0)).toFixed(2)} جنيه
+                                    </Typography>
+                                </Box>
                             </Alert>
 
                             <Grid container spacing={2}>
@@ -248,17 +323,24 @@ function SessionsPage() {
 
                             <Grid container spacing={2}>
                                 <Grid item xs={12}>
-                                    <FormControl fullWidth>
-                                        <InputLabel>المشروب</InputLabel>
-                                        <Select value={selectedBeverage} label="المشروب"
-                                            onChange={(e) => setSelectedBeverage(e.target.value)}>
-                                            {beverages.map((bev) => (
-                                                <MenuItem key={bev.id} value={bev.id}>
-                                                    {bev.name} - {bev.price} جنيه
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
+                                    <Autocomplete
+                                        fullWidth
+                                        options={beverages}
+                                        groupBy={(option) => option.category || 'عام'}
+                                        getOptionLabel={(option) => `${option.name} - ${option.price} جنيه`}
+                                        value={beverages.find(b => b.id === selectedBeverage) || null}
+                                        onChange={(event, newValue) => setSelectedBeverage(newValue?.id || '')}
+                                        renderInput={(params) => <TextField {...params} label="المشروب" />}
+                                        renderGroup={(params) => (
+                                            <li key={params.key}>
+                                                <ListSubheader sx={{ fontWeight: 800, color: 'primary.main', backgroundColor: 'neutral.100', lineHeight: '36px' }}>
+                                                    {params.group}
+                                                </ListSubheader>
+                                                <ul style={{ padding: 0 }}>{params.children}</ul>
+                                            </li>
+                                        )}
+                                        noOptionsText="لا توجد مشروبات"
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
                                     <TextField fullWidth label="الكمية" type="number" value={quantity}
@@ -274,6 +356,13 @@ function SessionsPage() {
                     <Button variant="contained" onClick={handleAddBeverage}>إضافة</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Invoice Dialog */}
+            <InvoiceDialog
+                open={invoiceDialog.open}
+                onClose={() => setInvoiceDialog({ open: false, sessionId: null })}
+                sessionId={invoiceDialog.sessionId}
+            />
         </Box>
     );
 }

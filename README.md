@@ -43,11 +43,37 @@ npm install
 npm start
 ```
 
-3. **Build Application (Production)**
+3. **Build Windows Installer (Production)**
 ```bash
-npm run build
-npm run dist
+# First time: Convert icon
+npm run icon:convert
+
+# Build installer
+npm run build:installer
 ```
+
+Output: `dist/Horus-Coworking-Setup-1.0.0.exe`
+
+📖 **For detailed distribution guide, see [DEPLOY.md](./DEPLOY.md)**
+
+## 📥 Download & Distribution
+
+### For End Users
+
+**Download the latest release:**
+- Windows 10/11 (64-bit): `Horus-Coworking-Setup-1.0.0.exe` (~150MB)
+
+**Installation:**
+1. Download the installer
+2. Run the EXE file (you may see "Unknown Publisher" warning - click "More info" → "Run anyway")
+3. Choose installation directory
+4. Complete installation and launch from desktop shortcut
+
+**System Requirements:**
+- Windows 10 or 11 (64-bit)
+- 4GB RAM minimum (8GB recommended)
+- 300MB disk space
+
 
 ## 📱 Main Pages
 

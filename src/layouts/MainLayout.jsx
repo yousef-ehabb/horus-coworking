@@ -70,24 +70,35 @@ function MainLayout({ onLogout }) {
 
     const drawer = (
         <Box>
-            <Toolbar
+            {/* Spacer removed - Sidebar Full Height */}
+
+            {/* Branding - Restored to Sidebar */}
+            <Box
                 sx={{
-                    background: 'linear-gradient(135deg, #1565C0 0%, #42a5f5 100%)',
+                    background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
                     color: 'white',
-                    minHeight: '80px !important',
+                    p: 2,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 2,
                 }}
             >
-                <Box sx={{ textAlign: 'center', width: '100%', py: 1 }}>
-                    <Typography variant="h4" sx={{ fontWeight: 700, mb: 0.5 }}>
-                        حورس
-                    </Typography>
-                    <Typography variant="caption" sx={{ opacity: 0.9 }}>
-                        نظام إدارة مساحات العمل
-                    </Typography>
-                </Box>
-            </Toolbar>
-
-            <Divider />
+                <Box
+                    component="img"
+                    src="./icon.png"
+                    alt="Horus Icon"
+                    sx={{
+                        height: 40,
+                        width: 40,
+                        backgroundColor: 'white',
+                        p: 0.5,
+                        borderRadius: 2,
+                    }}
+                />
+                <Typography variant="h6" sx={{ fontWeight: 800, color: 'white' }}>
+                    حورس
+                </Typography>
+            </Box>
 
             <List sx={{ px: 1, pt: 2 }}>
                 {menuItems.map((item) => (
@@ -156,37 +167,41 @@ function MainLayout({ onLogout }) {
             <AppBar
                 position="fixed"
                 sx={{
-                    width: { sm: `calc(100% - ${drawerWidth}px)` },
-                    mr: { sm: `${drawerWidth}px` },
+                    width: '100%',
+                    left: 0,
+                    right: 0,
+                    paddingRight: { sm: `${drawerWidth}px` },
                     backgroundColor: 'white',
                     color: 'text.primary',
                     boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
                 }}
             >
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        edge="start"
-                        onClick={handleDrawerToggle}
-                        sx={{ ml: 2, display: { sm: 'none' } }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
+                <Toolbar sx={{ display: 'flex', justifyContent: 'space-between', px: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        <IconButton
+                            color="inherit"
+                            edge="start"
+                            onClick={handleDrawerToggle}
+                            sx={{ ml: 2, display: { sm: 'none' } }}
+                        >
+                            <MenuIcon />
+                        </IconButton>
 
-                    <Typography variant="h6" sx={{ flexGrow: 1, fontWeight: 600 }}>
-                        {menuItems.find(item => item.path === location.pathname)?.text || 'حورس'}
-                    </Typography>
+                        <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                            {menuItems.find(item => item.path === location.pathname)?.text || 'حورس'}
+                        </Typography>
+                    </Box>
 
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Chip
-                            label={currentTime.format('dddd، D MMMM YYYY')}
-                            color="primary"
-                            variant="outlined"
-                        />
                         <Chip
                             label={currentTime.format('hh:mm:ss A')}
                             color="secondary"
                             sx={{ fontWeight: 600 }}
+                        />
+                        <Chip
+                            label={currentTime.format('dddd، D MMMM YYYY')}
+                            color="primary"
+                            variant="outlined"
                         />
                     </Box>
                 </Toolbar>

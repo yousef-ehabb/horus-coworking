@@ -23,6 +23,7 @@ function createWindow() {
         height: 900,
         minWidth: 1200,
         minHeight: 700,
+        icon: path.join(__dirname, '../../public/icon.png'),
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -38,7 +39,7 @@ function createWindow() {
     mainWindow.loadURL(startUrl);
 
     if (isDev) {
-        mainWindow.webContents.openDevTools();
+        // mainWindow.webContents.openDevTools();
     }
 
     mainWindow.on('close', (event) => {

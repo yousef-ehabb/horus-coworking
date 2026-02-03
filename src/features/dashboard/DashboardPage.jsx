@@ -3,12 +3,13 @@ import {
     Box, Grid, Card, CardContent, Typography, TextField, Button,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
     Chip, IconButton, Dialog, DialogTitle, DialogContent, DialogActions,
-    FormControl, InputLabel, Select, MenuItem, Alert, AlertTitle,
+    FormControl, InputLabel, Select, MenuItem, Alert, AlertTitle, ListSubheader, Autocomplete,
 } from '@mui/material';
 import {
     PlayArrow, Stop, LocalCafe, TrendingUp, People, CardGiftcard, AttachMoney,
 } from '@mui/icons-material';
 import dayjs from 'dayjs';
+import InvoiceDialog from '../sessions/InvoiceDialog';
 
 const { electronAPI } = window;
 
@@ -24,6 +25,9 @@ function DashboardPage() {
     const [beverages, setBeverages] = useState([]);
     const [selectedBeverage, setSelectedBeverage] = useState('');
     const [quantity, setQuantity] = useState(1);
+    const [invoiceDialog, setInvoiceDialog] = useState({ open: false, sessionId: null });
+    const [endDialog, setEndDialog] = useState({ open: false, session: null });
+    const [endData, setEndData] = useState({ paymentMethod: 'cash', notes: '' });
 
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(Date.now()), 1000);
@@ -149,7 +153,9 @@ function DashboardPage() {
     const getExpectedCost = (session) => {
         const elapsed = currentTime - new Date(session.start_time).getTime();
         const hours = elapsed / 3600000;
-        return (hours * session.hourly_rate).toFixed(2);
+        const timeCost = hours * session.hourly_rate;
+        const beveragesCost = session.beverages_cost || 0;
+        return (timeCost + beveragesCost).toFixed(2);
     };
 
     const handleAddBeverage = async () => {
@@ -171,6 +177,32 @@ function DashboardPage() {
         } catch (error) {
             alert('حدث خطأ في إضافة المشروب');
         }
+    };
+
+    const handleEndSession = async () => {
+        try {
+            await electronAPI.endSession(endDialog.session.id, {
+                endTime: new Date().toISOString(),
+                paymentMethod: endData.paymentMethod,
+                notes: endData.notes,
+            });
+            const sessionId = endDialog.session.id;
+            setEndDialog({ open: false, session: null });
+            setEndData({ paymentMethod: 'cash', notes: '' });
+            loadActiveSessions();
+            loadStats();
+            // Show invoice after ending session
+            setInvoiceDialog({ open: true, sessionId });
+        } catch (error) {
+            alert('حدث خطأ');
+        }
+    };
+
+    const calculateElapsed = (startTime) => {
+        const elapsed = Date.now() - new Date(startTime).getTime();
+        const hours = Math.floor(elapsed / 3600000);
+        const minutes = Math.floor((elapsed % 3600000) / 60000);
+        return `${hours}:${minutes.toString().padStart(2, '0')}`;
     };
 
     // تحديد رسالة التنبيه بناءً على حالة العميل
@@ -202,9 +234,14 @@ function DashboardPage() {
     return (
         <Box>
             {/* نموذج بدء جلسة سريع */}
-            <Card elevation={4} sx={{ mb: 3, background: 'linear-gradient(135deg, #1565C0 0%, #42a5f5 100%)', color: 'white' }}>
+            <Card elevation={4} sx={{
+                mb: 3,
+                background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
+                color: 'white',
+                borderRadius: 4
+            }}>
                 <CardContent sx={{ p: 3 }}>
-                    <Typography variant="h5" sx={{ mb: 3, fontWeight: 700 }}>
+                    <Typography variant="h5" sx={{ mb: 3, fontWeight: 800 }}>
                         🚀 بدء جلسة جديدة
                     </Typography>
 
@@ -216,7 +253,7 @@ function DashboardPage() {
                             value={phoneNumber}
                             onChange={handlePhoneChange}
                             inputProps={{ maxLength: 11 }}
-                            sx={{ backgroundColor: 'white', borderRadius: 1 }}
+                            sx={{ backgroundColor: 'white', borderRadius: 2 }}
                         />
 
                         <Button
@@ -228,11 +265,12 @@ function DashboardPage() {
                             sx={{
                                 minWidth: 180,
                                 height: 56,
-                                backgroundColor: '#FFD700',
+                                backgroundColor: '#FFD600',
                                 color: '#000',
-                                fontWeight: 700,
+                                fontWeight: 800,
                                 fontSize: '1.1rem',
-                                '&:hover': { backgroundColor: '#FFC000' },
+                                borderRadius: 2,
+                                '&:hover': { backgroundColor: '#FFC400' },
                             }}
                         >
                             بدء الجلسة
@@ -244,7 +282,7 @@ function DashboardPage() {
             </Card>
 
             {/* الجلسات النشطة */}
-            <Card elevation={3} sx={{ mb: 3 }}>
+            <Card elevation={1} sx={{ mb: 3, border: '1px solid', borderColor: 'neutral.200' }}>
                 <CardContent>
                     <Typography variant="h5" sx={{ mb: 2, fontWeight: 700, color: 'primary.main' }}>
                         👥 الجلسات النشطة ({activeSessions.length})
@@ -293,7 +331,11 @@ function DashboardPage() {
                                                         title="إضافة مشروب">
                                                         <LocalCafe />
                                                     </IconButton>
-                                                    <IconButton size="small" color="error" title="إنهاء الجلسة"><Stop /></IconButton>
+                                                    <IconButton size="small" color="error"
+                                                        onClick={() => setEndDialog({ open: true, session })}
+                                                        title="إنهاء الجلسة">
+                                                        <Stop />
+                                                    </IconButton>
                                                 </Box>
                                             </TableCell>
                                         </TableRow>
@@ -314,7 +356,7 @@ function DashboardPage() {
                     { icon: <CardGiftcard />, value: stats.packages, label: 'باقات مباعة', color: 'secondary.main' },
                 ].map((stat, i) => (
                     <Grid item xs={12} sm={6} md={3} key={i}>
-                        <Card elevation={2}>
+                        <Card elevation={1} sx={{ border: '1px solid', borderColor: 'neutral.200' }}>
                             <CardContent sx={{ textAlign: 'center' }}>
                                 {React.cloneElement(stat.icon, { sx: { fontSize: 40, color: stat.color, mb: 1 } })}
                                 <Typography variant="h4" sx={{ fontWeight: 700, color: stat.color }}>{stat.value}</Typography>
@@ -348,6 +390,50 @@ function DashboardPage() {
                 </DialogActions>
             </Dialog>
 
+            {/* End Session Dialog */}
+            <Dialog open={endDialog.open} onClose={() => setEndDialog({ open: false, session: null })} maxWidth="sm" fullWidth>
+                <DialogTitle sx={{ fontWeight: 700 }}>إنهاء الجلسة</DialogTitle>
+                <DialogContent>
+                    {endDialog.session && (
+                        <Box sx={{ pt: 2 }}>
+                            <Alert severity="info" sx={{ mb: 3 }}>
+                                <Typography variant="body2"><strong>العميل:</strong> {endDialog.session.customer_name}</Typography>
+                                <Typography variant="body2"><strong>وقت البدء:</strong> {dayjs(endDialog.session.start_time).format('DD/MM/YYYY hh:mm A')}</Typography>
+                                <Typography variant="body2"><strong>الوقت المنقضي:</strong> {calculateElapsed(endDialog.session.start_time)}</Typography>
+                                <Box sx={{ mt: 1, pt: 1, borderTop: '1px solid', borderColor: 'divider' }}>
+                                    <Typography variant="body2"><strong>تكلفة الوقت:</strong> {(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate).toFixed(2)} جنيه</Typography>
+                                    <Typography variant="body2"><strong>تكلفة المشروبات:</strong> {endDialog.session.beverages_cost || 0} جنيه</Typography>
+                                    <Typography variant="h6" sx={{ mt: 1, color: 'success.main', fontWeight: 800 }}>
+                                        إجمالي: {(((Date.now() - new Date(endDialog.session.start_time).getTime()) / 3600000) * endDialog.session.hourly_rate + (endDialog.session.beverages_cost || 0)).toFixed(2)} جنيه
+                                    </Typography>
+                                </Box>
+                            </Alert>
+
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <FormControl fullWidth>
+                                        <InputLabel>طريقة الدفع</InputLabel>
+                                        <Select value={endData.paymentMethod} label="طريقة الدفع"
+                                            onChange={(e) => setEndData({ ...endData, paymentMethod: e.target.value })}>
+                                            <MenuItem value="cash">كاش</MenuItem>
+                                            <MenuItem value="card">كارت</MenuItem>
+                                        </Select>
+                                    </FormControl>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <TextField fullWidth label="ملاحظات (اختياري)" multiline rows={3} value={endData.notes}
+                                        onChange={(e) => setEndData({ ...endData, notes: e.target.value })} />
+                                </Grid>
+                            </Grid>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setEndDialog({ open: false, session: null })}>إلغاء</Button>
+                    <Button variant="contained" color="error" onClick={handleEndSession}>إنهاء وحفظ</Button>
+                </DialogActions>
+            </Dialog>
+
             {/* Beverage Dialog */}
             <Dialog open={beverageDialog.open} onClose={() => setBeverageDialog({ open: false, session: null })} maxWidth="sm" fullWidth>
                 <DialogTitle sx={{ fontWeight: 700 }}>إضافة مشروب للجلسة</DialogTitle>
@@ -360,17 +446,24 @@ function DashboardPage() {
 
                             <Grid container spacing={2}>
                                 <Grid item xs={12}>
-                                    <FormControl fullWidth>
-                                        <InputLabel>المشروب</InputLabel>
-                                        <Select value={selectedBeverage} label="المشروب"
-                                            onChange={(e) => setSelectedBeverage(e.target.value)}>
-                                            {beverages.map((bev) => (
-                                                <MenuItem key={bev.id} value={bev.id}>
-                                                    {bev.name} - {bev.price} جنيه
-                                                </MenuItem>
-                                            ))}
-                                        </Select>
-                                    </FormControl>
+                                    <Autocomplete
+                                        fullWidth
+                                        options={beverages}
+                                        groupBy={(option) => option.category || 'عام'}
+                                        getOptionLabel={(option) => `${option.name} - ${option.price} جنيه`}
+                                        value={beverages.find(b => b.id === selectedBeverage) || null}
+                                        onChange={(event, newValue) => setSelectedBeverage(newValue?.id || '')}
+                                        renderInput={(params) => <TextField {...params} label="المشروب" />}
+                                        renderGroup={(params) => (
+                                            <li key={params.key}>
+                                                <ListSubheader sx={{ fontWeight: 800, color: 'primary.main', backgroundColor: 'neutral.100', lineHeight: '36px' }}>
+                                                    {params.group}
+                                                </ListSubheader>
+                                                <ul style={{ padding: 0 }}>{params.children}</ul>
+                                            </li>
+                                        )}
+                                        noOptionsText="لا توجد مشروبات"
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
                                     <TextField fullWidth label="الكمية" type="number" value={quantity}
@@ -386,6 +479,13 @@ function DashboardPage() {
                     <Button variant="contained" onClick={handleAddBeverage}>إضافة</Button>
                 </DialogActions>
             </Dialog>
+
+            {/* Invoice Dialog */}
+            <InvoiceDialog
+                open={invoiceDialog.open}
+                onClose={() => setInvoiceDialog({ open: false, sessionId: null })}
+                sessionId={invoiceDialog.sessionId}
+            />
         </Box>
     );
 }

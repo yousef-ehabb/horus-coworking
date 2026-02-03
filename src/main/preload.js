@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     createSession: (data) => ipcRenderer.invoke('sessions:create', data),
     updateSession: (id, data) => ipcRenderer.invoke('sessions:update', id, data),
     endSession: (id, data) => ipcRenderer.invoke('sessions:end', id, data),
+    getSessionInvoice: (sessionId) => ipcRenderer.invoke('sessions:getInvoiceData', sessionId),
     addBeverageToSession: (sessionId, beverageId, quantity) =>
         ipcRenderer.invoke('sessions:addBeverage', sessionId, beverageId, quantity),
 
@@ -39,6 +40,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
     // Settings
     getSettings: () => ipcRenderer.invoke('settings:getAll'),
     updateSetting: (key, value) => ipcRenderer.invoke('settings:update', key, value),
+    factoryReset: (options) => ipcRenderer.invoke('settings:factoryReset', options),
 
     // Database
     backupDatabase: (path) => ipcRenderer.invoke('db:backup', path),

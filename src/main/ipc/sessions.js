@@ -12,6 +12,37 @@ module.exports = (ipcMain, db) => {
         });
     });
 
+    ipcMain.handle('sessions:getHistory', (event, filters = {}) => {
+        return new Promise((resolve, reject) => {
+            let query = `
+        SELECT s.* FROM sessions s
+        WHERE s.status = 'paid'
+      `;
+            const params = [];
+
+            if (filters.startDate) {
+                query += ' AND DATE(s.start_time) >= ?';
+                params.push(filters.startDate);
+            }
+            if (filters.endDate) {
+                query += ' AND DATE(s.start_time) <= ?';
+                params.push(filters.endDate);
+            }
+            if (filters.customerType) {
+                query += ' AND s.customer_type = ?';
+                params.push(filters.customerType);
+            }
+
+            query += ' ORDER BY s.start_time DESC LIMIT 500';
+
+            db.all(query, params, (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows || []);
+            });
+        });
+    });
+
+
     ipcMain.handle('sessions:create', (event, data) => {
         return new Promise((resolve, reject) => {
             const hourlyRate = data.customerType === 'student' ? 20 : 30;
@@ -134,6 +165,54 @@ module.exports = (ipcMain, db) => {
                         db.run('COMMIT', (err) => {
                             if (err) reject(err);
                             else resolve({ success: true, hours, totalCost, fromPackage });
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    ipcMain.handle('sessions:getInvoiceData', (event, sessionId) => {
+        return new Promise((resolve, reject) => {
+            // Get session details
+            db.get('SELECT * FROM sessions WHERE id = ?', [sessionId], (err, session) => {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                if (!session) {
+                    reject(new Error('Session not found'));
+                    return;
+                }
+
+                // Get beverages for this session
+                db.all(`
+          SELECT * FROM session_beverages 
+          WHERE session_id = ? 
+          ORDER BY created_at
+        `, [sessionId], (err, beverages) => {
+                    if (err) {
+                        reject(err);
+                        return;
+                    }
+
+                    // Get settings for business info
+                    db.all('SELECT * FROM settings', [], (err, settings) => {
+                        if (err) {
+                            reject(err);
+                            return;
+                        }
+
+                        const settingsObj = {};
+                        settings.forEach(s => {
+                            settingsObj[s.setting_key] = s.setting_value;
+                        });
+
+                        resolve({
+                            session,
+                            beverages: beverages || [],
+                            settings: settingsObj
                         });
                     });
                 });

@@ -10,8 +10,8 @@ module.exports = (ipcMain, db) => {
 
     ipcMain.handle('beverages:create', (event, data) => {
         return new Promise((resolve, reject) => {
-            db.run('INSERT INTO beverages (name, price) VALUES (?, ?)',
-                [data.name, data.price], function (err) {
+            db.run('INSERT INTO beverages (name, price, category) VALUES (?, ?, ?)',
+                [data.name, data.price, data.category], function (err) {
                     if (err) reject(err);
                     else resolve({ id: this.lastID, ...data });
                 });
@@ -22,9 +22,9 @@ module.exports = (ipcMain, db) => {
         return new Promise((resolve, reject) => {
             db.run(`
         UPDATE beverages 
-        SET name = ?, price = ?, is_available = ?, updated_at = CURRENT_TIMESTAMP
+        SET name = ?, price = ?, category = ?, is_available = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
-      `, [data.name, data.price, data.isAvailable ? 1 : 0, id], (err) => {
+      `, [data.name, data.price, data.category, data.isAvailable ? 1 : 0, id], (err) => {
                 if (err) reject(err);
                 else resolve({ id, ...data });
             });

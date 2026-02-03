@@ -91,7 +91,7 @@ function CustomersPage() {
                 </Button>
             </Box>
 
-            <Card elevation={3}>
+            <Card elevation={1} sx={{ border: '1px solid', borderColor: 'neutral.200' }}>
                 <CardContent>
                     <TextField
                         fullWidth

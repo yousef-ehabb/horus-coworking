@@ -34,27 +34,30 @@ function LoginPage({ onLogin }) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                background: 'linear-gradient(135deg, #1565C0 0%, #42a5f5 100%)',
+                background: (theme) => `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
             }}
         >
-            <Container maxWidth="sm">
-                <Card elevation={10}>
-                    <CardContent sx={{ p: 4 }}>
+            <Container maxWidth="xs">
+                <Card elevation={10} sx={{ borderRadius: 4 }}>
+                    <CardContent sx={{ p: 5 }}>
                         <Box sx={{ textAlign: 'center', mb: 4 }}>
-                            <Typography
-                                variant="h3"
-                                component="h1"
-                                gutterBottom
+                            {/* App Icon */}
+                            <Box
+                                component="img"
+                                src="./icon.png"
+                                alt="Horus Icon"
                                 sx={{
-                                    fontWeight: 700,
-                                    color: 'primary.main',
-                                    textShadow: '2px 2px 4px rgba(0,0,0,0.1)'
+                                    height: 80,
+                                    width: 80,
+                                    mb: 2,
+                                    borderRadius: 3,
                                 }}
-                            >
+                            />
+                            <Typography variant="h4" fontWeight="800" color="primary.main" gutterBottom>
                                 حورس
                             </Typography>
-                            <Typography variant="h6" color="text.secondary">
-                                نظام إدارة مساحات العمل المشتركة
+                            <Typography variant="body1" color="text.secondary" fontWeight="500">
+                                نظام إدارة مساحات العمل
                             </Typography>
                         </Box>
 

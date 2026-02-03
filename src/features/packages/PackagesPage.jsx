@@ -60,7 +60,7 @@ function PackagesPage() {
                 )}
             </Box>
 
-            <Card elevation={3}>
+            <Card elevation={1} sx={{ border: '1px solid', borderColor: 'neutral.200' }}>
                 <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tab label="الباقات المتاحة" />
                     <Tab label="اشتراكات العملاء" />

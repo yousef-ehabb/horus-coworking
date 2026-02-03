@@ -60,30 +60,42 @@ function BeveragesPage() {
                 </Button>
             </Box>
 
-            <Card elevation={3}>
-                <CardContent>
+            <Card elevation={1} sx={{ border: '1px solid', borderColor: 'neutral.200' }}>
+                <CardContent sx={{ p: 0 }}>
                     <TableContainer>
                         <Table>
-                            <TableHead>
+                            <TableHead sx={{ backgroundColor: 'neutral.50' }}>
                                 <TableRow>
-                                    <TableCell sx={{ fontWeight: 700 }}>اسم المشروب</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>السعر</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>الحالة</TableCell>
-                                    <TableCell sx={{ fontWeight: 700 }}>إجراءات</TableCell>
+                                    <TableCell sx={{ fontWeight: 800 }}>اسم المشروب</TableCell>
+                                    <TableCell sx={{ fontWeight: 800 }}>التصنيف</TableCell>
+                                    <TableCell sx={{ fontWeight: 800 }}>السعر</TableCell>
+                                    <TableCell sx={{ fontWeight: 800 }}>الحالة</TableCell>
+                                    <TableCell sx={{ fontWeight: 800, textAlign: 'center' }}>إجراءات</TableCell>
                                 </TableRow>
                             </TableHead>
                             <TableBody>
                                 {beverages.map((beverage) => (
                                     <TableRow key={beverage.id} hover>
-                                        <TableCell sx={{ fontWeight: 600, fontSize: '1.1rem' }}>{beverage.name}</TableCell>
-                                        <TableCell sx={{ fontWeight: 700, color: 'success.main', fontSize: '1.1rem' }}>
+                                        <TableCell sx={{ fontWeight: 600, color: 'neutral.900' }}>{beverage.name}</TableCell>
+                                        <TableCell>
+                                            <Chip
+                                                label={beverage.category || 'عام'}
+                                                size="small"
+                                                variant="outlined"
+                                                sx={{ fontWeight: 600, color: 'primary.main', borderColor: 'primary.light' }}
+                                            />
+                                        </TableCell>
+                                        <TableCell sx={{ fontWeight: 800, color: 'success.main' }}>
                                             {beverage.price} جنيه
                                         </TableCell>
                                         <TableCell>
-                                            <Chip label={beverage.is_available ? 'متاح' : 'غير متاح'}
-                                                color={beverage.is_available ? 'success' : 'default'} size="small" />
+                                            <Chip
+                                                label={beverage.is_available ? 'متاح' : 'غير متاح'}
+                                                color={beverage.is_available ? 'success' : 'default'}
+                                                size="small"
+                                            />
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell sx={{ textAlign: 'center' }}>
                                             <IconButton size="small" color="primary"
                                                 onClick={() => setDialog({ open: true, mode: 'edit', data: beverage })}>
                                                 <Edit />
@@ -102,18 +114,36 @@ function BeveragesPage() {
 
             {/* Dialog */}
             <Dialog open={dialog.open} onClose={() => setDialog({ ...dialog, open: false })} maxWidth="sm" fullWidth>
-                <DialogTitle sx={{ fontWeight: 700 }}>
+                <DialogTitle sx={{ fontWeight: 800, borderBottom: '1px solid', borderColor: 'divider', mb: 2 }}>
                     {dialog.mode === 'add' ? 'إضافة مشروب جديد' : 'تعديل المشروب'}
                 </DialogTitle>
                 <DialogContent>
-                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                    <Grid container spacing={3} sx={{ mt: 0 }}>
                         <Grid item xs={12}>
-                            <TextField fullWidth label="اسم المشروب" value={dialog.data.name || ''}
-                                onChange={(e) => setDialog({ ...dialog, data: { ...dialog.data, name: e.target.value } })} />
+                            <TextField
+                                fullWidth
+                                label="اسم المشروب"
+                                value={dialog.data.name || ''}
+                                onChange={(e) => setDialog({ ...dialog, data: { ...dialog.data, name: e.target.value } })}
+                            />
                         </Grid>
-                        <Grid item xs={12}>
-                            <TextField fullWidth label="السعر (جنيه)" type="number" value={dialog.data.price || ''}
-                                onChange={(e) => setDialog({ ...dialog, data: { ...dialog.data, price: parseFloat(e.target.value) } })} />
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                fullWidth
+                                label="السعر (جنيه)"
+                                type="number"
+                                value={dialog.data.price || ''}
+                                onChange={(e) => setDialog({ ...dialog, data: { ...dialog.data, price: parseFloat(e.target.value) } })}
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                            <TextField
+                                fullWidth
+                                label="التصنيف"
+                                placeholder="مثلاً: مشروبات ساخنة"
+                                value={dialog.data.category || ''}
+                                onChange={(e) => setDialog({ ...dialog, data: { ...dialog.data, category: e.target.value } })}
+                            />
                         </Grid>
                     </Grid>
                 </DialogContent>

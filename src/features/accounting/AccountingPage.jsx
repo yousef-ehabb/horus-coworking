@@ -45,7 +45,7 @@ function AccountingPage() {
                         { icon: <People />, value: dailyReport.newCustomers, label: 'عملاء جدد', color: 'info.main' },
                     ].map((stat, i) => (
                         <Grid item xs={12} sm={6} md={3} key={i}>
-                            <Card elevation={2}>
+                            <Card elevation={1} sx={{ border: '1px solid', borderColor: 'neutral.200' }}>
                                 <CardContent sx={{ textAlign: 'center' }}>
                                     {React.cloneElement(stat.icon, { sx: { fontSize: 40, color: stat.color, mb: 1 } })}
                                     <Typography variant="h4" sx={{ fontWeight: 700, color: stat.color }}>{stat.value}</Typography>
@@ -57,7 +57,7 @@ function AccountingPage() {
                 </Grid>
             )}
 
-            <Card elevation={3}>
+            <Card elevation={1} sx={{ border: '1px solid', borderColor: 'neutral.200' }}>
                 <Tabs value={tab} onChange={(e, v) => setTab(v)} sx={{ borderBottom: 1, borderColor: 'divider' }}>
                     <Tab label="التقرير اليومي" />
                     <Tab label="سجل المعاملات" />
